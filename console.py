@@ -94,7 +94,7 @@ class HBNBCommand(cmd.Cmd):
         a = []
         for s in line.split():
             a.append(s)#print(storage.__objects) --- Needs setters and getters
-        print(a)
+        #print(a)
         if len(a) > 0:
             if a[0] in c:
                 if len(a) > 1:
@@ -146,7 +146,7 @@ class HBNBCommand(cmd.Cmd):
 
     def default(self, line):
         """Prints User instances"""
-        print(line)
+        #print(line)
         a = []
         for s in line.split("."):
             a.append(s)
@@ -161,6 +161,11 @@ class HBNBCommand(cmd.Cmd):
                     self.do_show(a[0] + " " + cl[1].split("\")")[0])
                 elif cl[0] == "destroy":
                     self.do_destroy(a[0] + " " + cl[1].split("\")")[0])
+                elif cl[0] == "update":
+                    clid = cl[1].split("\", \"")[0]
+                    clnm = (cl[1].split("\", \"")[1])
+                    clnmvl = (cl[1].split("\", \"")[2]).split("\")")[0]
+                    self.do_update(a[0] + " " + clid + " " + clnm + " " + clnmvl)
 
 
 
