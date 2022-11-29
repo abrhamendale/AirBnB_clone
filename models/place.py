@@ -1,10 +1,25 @@
 #!/usr/bin/python3
-"""State module"""
+"""
+Module: place
+"""
 from models.base_model import BaseModel
 
 
 class Place(BaseModel):
-    """State class"""
+    """A model for places.
+    Attributes:
+        name
+        user_id
+        city_id
+        description
+        number_bathrooms
+        price_by_night
+        number_rooms
+        longitude
+        latitude
+        max_guest
+        amenity_ids
+    """
     city_id = ""
     user_id = ""
     name = ""
@@ -13,10 +28,6 @@ class Place(BaseModel):
     number_bathrooms = 0
     max_guest = 0
     price_by_night = 0
-    latitude = 0
-    longitude = 0
+    latitude = 0.0
+    longitude = 0.0
     amenity_ids = []
-
-    def __init__(self):
-        """Initializes new user instances"""
-        super(Place, self).__init__()

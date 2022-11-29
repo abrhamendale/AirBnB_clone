@@ -1,69 +1,164 @@
 #!/usr/bin/python3
-
-"""Defines the tests for the BaseModel class
-   Unittest classes:
-   TestBaseModel_instantiation
-   TestBaseModel_save
-   TestBaseModel_to_dict
+# -*- coding: utf-8 -*-
 """
+test base model
+"""
+import sys
 import unittest
-from models.base_model import BaseModel
+import inspect
+import io
+import pep8
 from datetime import datetime
+import uuid
+from contextlib import redirect_stdout
+from models.base_model import BaseModel
 
 
 class TestBaseModel(unittest.TestCase):
-    """Checking for class instantiation"""
+    """
+    class for testing BaseModel class' methods
+    """
 
-    def test_instance(self):
-        self.assertTrue(BaseModel, type(BaseModel))
+    @classmethod
+    def setUpClass(cls):
+        """
+        Set up class method for the doc tests
+        """
+        cls.setup = inspect.getmembers(BaseModel, inspect.isfunction)
 
-    def test_id_type(self):
-        self.assertEqual(str, type(BaseModel().id))
+    def setUp(self):
+        """Set up method for object BM of BAseModel"""
+        self.BM = BaseModel()
 
-    def test_created_type(self):
-        self.assertEqual(datetime, type(BaseModel().created_at))
+    def tearDown(self):
+        """Set tmp object"""
+        self.BM = None
 
-    def test_updated_type(self):
-        self.assertEqual(datetime, type(BaseModel().updated_at))
+    def test_pep8_conformance_BaseModel(self):
+        """
+        Test that base_model.py file conform to PEP8
+        """
+        pep8style = pep8.StyleGuide(quiet=True)
+        result = pep8style.check_files(['models/base_model.py'])
+        self.assertEqual(result.total_errors, 0,
+                         "Found code style errors (and warnings).")
 
-    def test_kwargs(self):
-        kwgs = {'id': '3a68d630-8a02-406f-927d-71b4526554d5',
-                'created_at': '2022-10-29T08:52:59.957348',
-                'updated_at': '2022-10-29T08:55:14.470644',
-                '__class__': 'BaseModel'
-                }
-        new = BaseModel(**kwgs)
-        self.assertEqual(new.id, kwgs['id'])
+    def test_pep8_conformance_test_BaseModel(self):
+        """
+        Test that test_base_model.py file conform to PEP8
+        """
+        pep8style = pep8.StyleGuide(quiet=True)
+        result = pep8style.check_files(['tests/test_models/\
+                                        test_base_model.py'])
+        self.assertEqual(result.total_errors, 1,
+                         "Found code style errors (and warnings).")
 
+    def test_module_docstring(self):
+        """
+        Tests if module docstring documentation exist
+        """
+        self.assertTrue(len(BaseModel.__doc__) >= 1)
 
-class TestBaseModel_Save(unittest.TestCase):
-    """Tests the save method"""
-    def test_updated(self):
-        base = BaseModel()
-        t1 = base.updated_at
-        base.save()
-        t2 = base.updated_at
-        self.assertNotEqual(t1, t2)
+    def test_class_docstring(self):
+        """
+        Tests if class docstring documentation exist
+        """
+        self.assertTrue(len(BaseModel.__doc__) >= 1)
 
+    def test_func_docstrings(self):
+        """
+        Tests if methods docstring documntation exist
+        """
+        for func in self.setup:
+            self.assertTrue(len(func[1].__doc__) >= 1)
 
-class TestBaseModel_Todict(unittest.TestCase):
-    """Test if our base function converts to dict and ISO format"""
     def test_type(self):
-        dt = BaseModel()
-        self.assertTrue(dt, type(dt.to_dict()))
+        """test method for type testing of BaseModel
+        """
+        self.assertIsInstance(self.BM, BaseModel)
+        self.assertEqual(type(self.BM), BaseModel)
 
-    def test_dict(self):
-        dt = self.__dict__
-        new_dict = self.__dict__.copy()
-        self.assertEqual(new_dict, dt)
+    def test_basic_attribute_set(self):
+        """test method for basic attribute assignment
+        """
+        self.BM.first_name = 'Meco'
+        self.BM.last_name = 'Montes'
+        self.assertEqual(self.BM.first_name, 'Meco')
+        self.assertEqual(self.BM.last_name, 'Montes')
 
-    def test_contains(self):
-        dt = BaseModel()
-        self.assertIn("id", dt.to_dict())
-        self.assertIn("created_at", dt.to_dict())
-        self.assertIn("updated_at", dt.to_dict())
-        self.assertIn("__class__", dt.to_dict())
+    def test_str(self):
+        """tests str method
+        """
+        string = str(self.BM)
+        BMid = "[{}] ({}) {}".format(self.BM.__class__.__name__, self.BM.id,
+                                     self.BM.__dict__)
+        test = BMid in string
+        self.assertEqual(True, test)
+        test = "updated_at" in string
+        self.assertEqual(True, test)
+        test = "created_at" in string
+        self.assertEqual(True, test)
+        test = "datetime" in string
+        self.assertEqual(True, test)
 
+    def test_to_dict(self):
+        """tests to_dict method
+        """
+        my_dict = self.BM.to_dict()
+        self.assertEqual(str, type(my_dict['created_at']))
+        self.assertEqual(my_dict['created_at'],
+                         self.BM.created_at.isoformat())
+        self.assertEqual(datetime, type(self.BM.created_at))
+        self.assertEqual(my_dict['__class__'],
+                         self.BM.__class__.__name__)
+        self.assertEqual(my_dict['id'], self.BM.id)
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_to_dict_more(self):
+        """tests to_dict method
+        """
+        my_dict = self.BM.to_dict()
+        created_at = my_dict['created_at']
+        time = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f")
+        self.assertEqual(self.BM.created_at, time)
+
+    def test_from_dict_basic(self):
+        """tests from_dict method
+        """
+        my_dict = self.BM.to_dict()
+        BM1 = BaseModel(**my_dict)
+        self.assertEqual(BM1.id, self.BM.id)
+        self.assertEqual(BM1.updated_at, self.BM.updated_at)
+        self.assertEqual(BM1.created_at, self.BM.created_at)
+        self.assertEqual(BM1.__class__.__name__,
+                         self.BM.__class__.__name__)
+
+    def test_from_dict_hard(self):
+        """test for the from_dict method for BaseModel objects
+        """
+        self.BM.student = 'Science'
+        my_dict = self.BM.to_dict()
+        self.assertEqual(my_dict['student'], 'Science')
+        BM1 = BaseModel(**my_dict)
+        self.assertEqual(BM1.created_at, self.BM.created_at)
+
+    def test_unique_id(self):
+        """test for id in BaseModel objects
+        """
+        BM1 = BaseModel()
+        BM2 = BaseModel()
+        self.assertNotEqual(self.BM.id, BM1.id)
+        self.assertNotEqual(self.BM.id, BM2.id)
+
+    def test_id_type_string(self):
+        """test id in BaseModel is a string
+        """
+        self.assertEqual(type(self.BM.id), str)
+
+    def test_updated_time(self):
+        """test that updated time gets updated
+        """
+        time1 = self.BM.updated_at
+        self.BM.save()
+        time2 = self.BM.updated_at
+        self.assertNotEqual(time1, time2)
+        self.assertEqual(type(time1), datetime)
